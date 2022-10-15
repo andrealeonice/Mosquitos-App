@@ -16,17 +16,16 @@ public class MainActivity extends AppCompatActivity {
                 R.raw.sound);
 
     }
+    Boolean b = false;
 
       public void playMusic(View v) {
-
-           music.start();
+          if (!b) {
+              music.start();
+              b=true;
+          } else {
+              music.pause();
+              b=false;
+          }
+      }
 
         }
-
-      public void pauseMusic(View v) {
-            music.pause();
-        }
-
-
-
-}
