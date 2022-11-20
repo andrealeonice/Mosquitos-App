@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
           }
       }
     public void freqSound(View v){
-    final int duration = 10; // duration of sound in seconds
+    final int duration = 200; // duration of sound in seconds
     final int sampleRate = 8000; // Hz (maximum frequency is 7902.13Hz (B8))
     final int numSamples = duration * sampleRate;
     final double samples[] = new double[numSamples];
