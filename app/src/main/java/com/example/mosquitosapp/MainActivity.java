@@ -27,8 +27,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (audioTrack != null && audioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING) {
-                    audioTrack.pause();
-                    audioTrack.release();
+                    audioTrack.stop();
                 }
             }
         });
@@ -53,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
         int duration;
         double freq;
 
+
         try {
             duration = Integer.parseInt(txt2.getText().toString()); // duration of sound in seconds
             freq = Double.parseDouble(txt.getText().toString());
@@ -61,26 +61,44 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        int bufferSize = (sampleRate  * 16 * duration) / 8;
+        int bufferSize = AudioTrack.getMinBufferSize(sampleRate, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT);
 
         audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
                 sampleRate, AudioFormat.CHANNEL_OUT_MONO,
                 AudioFormat.ENCODING_PCM_16BIT, bufferSize, AudioTrack.MODE_STREAM);
 
-        short buffer[] = new short[bufferSize / 2];
-        double samples = 0;
-
-        for (int i = 0; i < buffer.length; ++i) {
-            samples += 2 * Math.PI * freq / sampleRate; // Sine wave
-            buffer[i] = (short) (Math.sin(samples) * Short.MAX_VALUE);  // Higher amplitude increases volume
-        }
+        final short[] buffer = new short[bufferSize / 2];
 
         // Inicia a reprodução
         if (audioTrack.getPlayState() != AudioTrack.PLAYSTATE_PLAYING) {
-            audioTrack.write(buffer, 0, buffer.length); // Escreve o buffer de amostras no AudioTrack
             audioTrack.play();
         }
+
+        Thread audioThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                int totalSamples = sampleRate * duration;
+                int samplesWritten = 0;
+                double samples = 0;
+
+                while (samplesWritten < totalSamples) {
+                    for (int i = 0; i < buffer.length; ++i) {
+                        samples += 2 * Math.PI * freq / sampleRate; // Sine wave
+                        buffer[i] = (short) (Math.sin(samples) * Short.MAX_VALUE);  // Higher amplitude increases volume
+                    }
+
+                    audioTrack.write(buffer, 0, buffer.length);
+                    samplesWritten += buffer.length;
+                }
+
+                audioTrack.stop();
+                audioTrack.release();
+            }
+        });
+
+        audioThread.start();
     }
-}
+    }
+
 
 
